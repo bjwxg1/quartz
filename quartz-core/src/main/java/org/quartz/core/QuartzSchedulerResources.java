@@ -67,7 +67,11 @@ public class QuartzSchedulerResources {
 
     private String rmiCreateRegistryStrategy = CREATE_REGISTRY_NEVER;
 
+    //TODO 这两个有什么区别
     private ThreadPool threadPool;
+
+    private ThreadExecutor threadExecutor;
+
 
     private JobStore jobStore;
 
@@ -87,7 +91,6 @@ public class QuartzSchedulerResources {
 
     private ManagementRESTServiceConfiguration managementRESTServiceConfiguration;
 
-    private ThreadExecutor threadExecutor;
 
     private long batchTimeWindow = 0;
 

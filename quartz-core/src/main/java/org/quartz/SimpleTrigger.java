@@ -144,6 +144,7 @@ public interface SimpleTrigger extends Trigger {
      * 
      * @see #REPEAT_INDEFINITELY
      */
+    //获取重复执行次数
     public int getRepeatCount();
 
     /**
@@ -151,6 +152,7 @@ public interface SimpleTrigger extends Trigger {
      * Get the the time interval (in milliseconds) at which the <code>SimpleTrigger</code> should repeat.
      * </p>
      */
+    //获取重复执行时间间隔
     public long getRepeatInterval();
     
     /**
@@ -158,6 +160,7 @@ public interface SimpleTrigger extends Trigger {
      * Get the number of times the <code>SimpleTrigger</code> has already fired.
      * </p>
      */
+    //已经触发的次数
     public int getTimesTriggered();
 
     TriggerBuilder<SimpleTrigger> getTriggerBuilder();

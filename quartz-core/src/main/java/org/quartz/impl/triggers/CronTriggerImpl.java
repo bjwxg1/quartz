@@ -73,11 +73,15 @@ public class CronTriggerImpl extends AbstractTrigger<CronTrigger> implements Cro
      * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
      */
 
+    //CRON表达式
     private CronExpression cronEx = null;
+    //开始时间、结束时间
     private Date startTime = null;
     private Date endTime = null;
+    //下次执行时间、上次执行时间
     private Date nextFireTime = null;
     private Date previousFireTime = null;
+    //时区
     private transient TimeZone timeZone = null;
 
     /*
@@ -100,6 +104,7 @@ public class CronTriggerImpl extends AbstractTrigger<CronTrigger> implements Cro
      */
     public CronTriggerImpl() {
         super();
+        //默认开始时间为NOW
         setStartTime(new Date());
         setTimeZone(TimeZone.getDefault());
     }
@@ -610,9 +615,11 @@ public class CronTriggerImpl extends AbstractTrigger<CronTrigger> implements Cro
             return;
 
         if (instr == MISFIRE_INSTRUCTION_SMART_POLICY) {
+            //立即触发
             instr = MISFIRE_INSTRUCTION_FIRE_ONCE_NOW;
         }
 
+        //根据当前之间获得下次执行时间并更新下次触发时间
         if (instr == MISFIRE_INSTRUCTION_DO_NOTHING) {
             Date newFireTime = getFireTimeAfter(new Date());
             while (newFireTime != null && cal != null

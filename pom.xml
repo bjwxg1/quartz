@@ -75,9 +75,9 @@
     <log4j.version>1.2.16</log4j.version>
     <maven-forge-plugin.version>1.1.9</maven-forge-plugin.version>
     <gmaven-plugin.version>1.4</gmaven-plugin.version>
-    <checkstyle-suppressions-file>${session.executionRootDirectory}/checkstyle/src/main/resources/suppressions.xml</checkstyle-suppressions-file>
+   <!-- <checkstyle-suppressions-file>${session.executionRootDirectory}/checkstyle/src/main/resources/suppressions.xml</checkstyle-suppressions-file>
     <checkstyle-config-file>${session.executionRootDirectory}/checkstyle/src/main/resources/checkstyle.xml</checkstyle-config-file>
-    <checkstyle-header-file>${session.executionRootDirectory}/checkstyle/src/main/resources/header.txt</checkstyle-header-file>
+    <checkstyle-header-file>${session.executionRootDirectory}/checkstyle/src/main/resources/header.txt</checkstyle-header-file>-->
 
     <terracotta-snapshots-url>http://nexus.terracotta.eur.ad.sag/content/repositories/terracotta-snapshots</terracotta-snapshots-url>
     <terracotta-staging-url>http://nexus.terracotta.eur.ad.sag/content/repositories/terracotta-staging</terracotta-staging-url>
@@ -229,9 +229,9 @@
           <version>2.9.1</version>
           <configuration>
             <encoding>UTF-8</encoding>          
-            <configLocation>${checkstyle-config-file}</configLocation>
+           <!-- <configLocation>${checkstyle-config-file}</configLocation>
             <headerLocation>${checkstyle-header-file}</headerLocation>
-            <suppressionsLocation>${checkstyle-suppressions-file}</suppressionsLocation>
+            <suppressionsLocation>${checkstyle-suppressions-file}</suppressionsLocation>-->
             <consoleOutput>true</consoleOutput>
             <logViolationsToConsole>true</logViolationsToConsole>
             <failsOnError>true</failsOnError>

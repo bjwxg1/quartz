@@ -46,6 +46,8 @@ import org.quartz.TriggerUtils;
  * @author James House
  * @author contributions by Lieven Govaerts of Ebitec Nv, Belgium.
  */
+//SimpleTrigger的下次计算时间是怎么计算？是延迟执行还是以固定频率执行？
+//参照getFireTimeAfter应该是基于固定频率执行
 public class SimpleTriggerImpl extends AbstractTrigger<SimpleTrigger> implements SimpleTrigger, CoreTrigger {
 
     /*
@@ -74,21 +76,19 @@ public class SimpleTriggerImpl extends AbstractTrigger<SimpleTrigger> implements
      * 
      * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
      */
-    
+    //开始时间、结束时间
     private Date startTime = null;
-
     private Date endTime = null;
-
+    //下次触发时间、上次触发时间
     private Date nextFireTime = null;
-
     private Date previousFireTime = null;
-
+    //重复次数，-1表示一直重复执行
     private int repeatCount = 0;
-
+    //触发间隔
     private long repeatInterval = 0;
-
+    //触发次数计数
     private int timesTriggered = 0;
-
+    //是否已经完成
     private boolean complete = false;
 
     /*
@@ -484,8 +484,10 @@ public class SimpleTriggerImpl extends AbstractTrigger<SimpleTrigger> implements
         }
 
         if (instr == MISFIRE_INSTRUCTION_FIRE_NOW) {
+            //如果要求立即执行，则设置下次执行时间为当前系统时间
             setNextFireTime(new Date());
         } else if (instr == MISFIRE_INSTRUCTION_RESCHEDULE_NEXT_WITH_EXISTING_COUNT) {
+            //根据当先时间获取下次触发时间
             Date newFireTime = getFireTimeAfter(new Date());
             while (newFireTime != null && cal != null
                     && !cal.isTimeIncluded(newFireTime.getTime())) {
@@ -521,11 +523,14 @@ public class SimpleTriggerImpl extends AbstractTrigger<SimpleTrigger> implements
             if (newFireTime != null) {
                 int timesMissed = computeNumTimesFiredBetween(nextFireTime,
                         newFireTime);
+                //注意次数跟新了触发次数，中间mis的触发，将被忽略的
                 setTimesTriggered(getTimesTriggered() + timesMissed);
             }
 
             setNextFireTime(newFireTime);
-        } else if (instr == MISFIRE_INSTRUCTION_RESCHEDULE_NOW_WITH_EXISTING_REPEAT_COUNT) {
+        }
+        //立即触发，设置剩余的触发次数
+        else if (instr == MISFIRE_INSTRUCTION_RESCHEDULE_NOW_WITH_EXISTING_REPEAT_COUNT) {
             Date newFireTime = new Date();
             if (repeatCount != 0 && repeatCount != REPEAT_INDEFINITELY) {
                 setRepeatCount(getRepeatCount() - getTimesTriggered());
@@ -538,7 +543,9 @@ public class SimpleTriggerImpl extends AbstractTrigger<SimpleTrigger> implements
                 setStartTime(newFireTime);
                 setNextFireTime(newFireTime);
             } 
-        } else if (instr == MISFIRE_INSTRUCTION_RESCHEDULE_NOW_WITH_REMAINING_REPEAT_COUNT) {
+        }
+        //
+        else if (instr == MISFIRE_INSTRUCTION_RESCHEDULE_NOW_WITH_REMAINING_REPEAT_COUNT) {
             Date newFireTime = new Date();
 
             int timesMissed = computeNumTimesFiredBetween(nextFireTime,
@@ -739,10 +746,12 @@ public class SimpleTriggerImpl extends AbstractTrigger<SimpleTrigger> implements
      */
     @Override
     public Date getFireTimeAfter(Date afterTime) {
+        //已经结束
         if (complete) {
             return null;
         }
 
+        //触发次数已经超过限制
         if ((timesTriggered > repeatCount)
                 && (repeatCount != REPEAT_INDEFINITELY)) {
             return null;
@@ -752,6 +761,7 @@ public class SimpleTriggerImpl extends AbstractTrigger<SimpleTrigger> implements
             afterTime = new Date();
         }
 
+        //只执行一次，且afterTime>getStartTime
         if (repeatCount == 0 && afterTime.compareTo(getStartTime()) >= 0) {
             return null;
         }
@@ -765,10 +775,12 @@ public class SimpleTriggerImpl extends AbstractTrigger<SimpleTrigger> implements
             return null;
         }
 
+        //如果afterMillis < startMillis，直接返回startMillis
         if (afterMillis < startMillis) {
             return new Date(startMillis);
         }
 
+        //计算已经执行的次数
         long numberOfTimesExecuted = ((afterMillis - startMillis) / repeatInterval) + 1;
 
         if ((numberOfTimesExecuted > repeatCount) && 
@@ -776,6 +788,7 @@ public class SimpleTriggerImpl extends AbstractTrigger<SimpleTrigger> implements
             return null;
         }
 
+        //计算下次执行的时间
         Date time = new Date(startMillis + (numberOfTimesExecuted * repeatInterval));
 
         if (endMillis <= time.getTime()) {

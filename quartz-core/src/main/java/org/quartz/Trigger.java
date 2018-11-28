@@ -57,7 +57,8 @@ import java.util.Date;
 public interface Trigger extends Serializable, Cloneable, Comparable<Trigger> {
 
     public static final long serialVersionUID = -3904243490805975570L;
-    
+
+    //trigger状态枚举
     public enum TriggerState { NONE, NORMAL, PAUSED, COMPLETE, ERROR, BLOCKED }
     
     /**
@@ -178,11 +179,13 @@ public interface Trigger extends Serializable, Cloneable, Comparable<Trigger> {
      * may remove the <code>Trigger</code> from the <code>{@link org.quartz.spi.JobStore}</code>.
      * </p>
      */
+    //判断Trigger是否继续触发，如果返回false表明 Trigger已经出发完成需要删除
     public boolean mayFireAgain();
 
     /**
      * Get the time at which the <code>Trigger</code> should occur.
      */
+    //获取trigger开始时间
     public Date getStartTime();
 
     /**
@@ -192,6 +195,7 @@ public interface Trigger extends Serializable, Cloneable, Comparable<Trigger> {
      * 
      * @see #getFinalFireTime()
      */
+    //获取trigger结算时间
     public Date getEndTime();
 
     /**
@@ -208,12 +212,14 @@ public interface Trigger extends Serializable, Cloneable, Comparable<Trigger> {
      *
      * @see TriggerUtils#computeFireTimesBetween(org.quartz.spi.OperableTrigger, Calendar, java.util.Date, java.util.Date)
      */
+    //获取下次触发时间
     public Date getNextFireTime();
 
     /**
      * Returns the previous time at which the <code>Trigger</code> fired.
      * If the trigger has not yet fired, <code>null</code> will be returned.
      */
+    //获取上次触发时间
     public Date getPreviousFireTime();
 
     /**
@@ -221,6 +227,7 @@ public interface Trigger extends Serializable, Cloneable, Comparable<Trigger> {
      * after the given time. If the trigger will not fire after the given time,
      * <code>null</code> will be returned.
      */
+    //获取给定时间后的下次触发时间
     public Date getFireTimeAfter(Date afterTime);
 
     /**
@@ -231,6 +238,7 @@ public interface Trigger extends Serializable, Cloneable, Comparable<Trigger> {
      * Note that the return time *may* be in the past.
      * </p>
      */
+    //最后一次触发时间
     public Date getFinalFireTime();
 
     /**
@@ -248,6 +256,7 @@ public interface Trigger extends Serializable, Cloneable, Comparable<Trigger> {
      * @see SimpleTrigger
      * @see CronTrigger
      */
+    //获取MisFire处理方式
     public int getMisfireInstruction();
 
     /**

@@ -46,6 +46,7 @@ import org.slf4j.LoggerFactory;
  *
  * @author James House
  */
+//调用线程触发trigger
 public class QuartzSchedulerThread extends Thread {
     /*
      * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -243,10 +244,9 @@ public class QuartzSchedulerThread extends Thread {
     @Override
     public void run() {
         int acquiresFailed = 0;
-
         while (!halted.get()) {
             try {
-                // check if we're supposed to pause...
+                //等待QuartzScheduler启动
                 synchronized (sigLock) {
                     while (paused && !halted.get()) {
                         try {
@@ -275,15 +275,15 @@ public class QuartzSchedulerThread extends Thread {
                     }
                 }
 
+                //获取可用线程数
                 int availThreadCount = qsRsrcs.getThreadPool().blockForAvailableThreads();
                 if(availThreadCount > 0) { // will always be true, due to semantics of blockForAvailableThreads...
-
                     List<OperableTrigger> triggers;
-
+                    //获取系统时间
                     long now = System.currentTimeMillis();
-
                     clearSignaledSchedulingChange();
                     try {
+                        //获取接下开将要触发的triger
                         triggers = qsRsrcs.getJobStore().acquireNextTriggers(
                                 now + idleWaitTime, Math.min(availThreadCount, qsRsrcs.getMaxBatchSize()), qsRsrcs.getBatchTimeWindow());
                         acquiresFailed = 0;
@@ -311,8 +311,11 @@ public class QuartzSchedulerThread extends Thread {
                     if (triggers != null && !triggers.isEmpty()) {
 
                         now = System.currentTimeMillis();
+                        //获取下次触发时间
                         long triggerTime = triggers.get(0).getNextFireTime().getTime();
                         long timeUntilTrigger = triggerTime - now;
+                        //TODO  这为什么是2
+                        //此处猜想：timeUntilTrigger<2在进行后面的逻辑,防止trigger触发太早导致任务提前执行
                         while(timeUntilTrigger > 2) {
                             synchronized (sigLock) {
                                 if (halted.get()) {
@@ -350,6 +353,7 @@ public class QuartzSchedulerThread extends Thread {
                         }
                         if(goAhead) {
                             try {
+                                //此处触发任务
                                 List<TriggerFiredResult> res = qsRsrcs.getJobStore().triggersFired(triggers);
                                 if(res != null)
                                     bndles = res;

@@ -72,7 +72,7 @@ public abstract class AbstractTrigger<T extends Trigger> implements OperableTrig
     *
     * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     */
-
+    //Trigger名称
     private String name;
 
     private String group = Scheduler.DEFAULT_GROUP;

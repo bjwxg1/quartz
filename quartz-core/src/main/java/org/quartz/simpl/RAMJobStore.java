@@ -1397,7 +1397,9 @@ public class RAMJobStore implements JobStore {
 
     protected boolean applyMisfire(TriggerWrapper tw) {
 
+        //
         long misfireTime = System.currentTimeMillis();
+        //获取任务超时时间
         if (getMisfireThreshold() > 0) {
             misfireTime -= getMisfireThreshold();
         }
@@ -1454,7 +1456,7 @@ public class RAMJobStore implements JobStore {
             // return empty list if store has no triggers.
             if (timeTriggers.size() == 0)
                 return result;
-            
+            //循环获取
             while (true) {
                 TriggerWrapper tw;
 
@@ -1467,6 +1469,7 @@ public class RAMJobStore implements JobStore {
                     break;
                 }
 
+                //获取下次执行时间
                 if (tw.trigger.getNextFireTime() == null) {
                     continue;
                 }
@@ -1550,6 +1553,7 @@ public class RAMJobStore implements JobStore {
                     continue;
                 }
                 // was the trigger completed, paused, blocked, etc. since being acquired?
+                //只有STATE_ACQUIRED才能继续向后执行
                 if (tw.state != TriggerWrapper.STATE_ACQUIRED) {
                     continue;
                 }
@@ -1567,6 +1571,7 @@ public class RAMJobStore implements JobStore {
                 tw.trigger.triggered(cal);
                 trigger.triggered(cal);
                 //tw.state = TriggerWrapper.STATE_EXECUTING;
+                //修改trigger状态为STATE_WAITING
                 tw.state = TriggerWrapper.STATE_WAITING;
 
                 TriggerFiredBundle bndle = new TriggerFiredBundle(retrieveJob(

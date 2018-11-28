@@ -812,6 +812,7 @@ public class QuartzScheduler implements RemotableQuartzScheduler {
      */
     public Date scheduleJob(JobDetail jobDetail,
             Trigger trigger) throws SchedulerException {
+        //判断schedule是否已经关闭
         validateState();
 
         if (jobDetail == null) {
@@ -845,6 +846,7 @@ public class QuartzScheduler implements RemotableQuartzScheduler {
         if (trigger.getCalendarName() != null) {
             cal = resources.getJobStore().retrieveCalendar(trigger.getCalendarName());
         }
+        //计算第一次触发时间
         Date ft = trig.computeFirstFireTime(cal);
 
         if (ft == null) {
@@ -853,8 +855,11 @@ public class QuartzScheduler implements RemotableQuartzScheduler {
         }
 
         resources.getJobStore().storeJobAndTrigger(jobDetail, trig);
+        //通知SchedulerListeners
         notifySchedulerListenersJobAdded(jobDetail);
+        //通知调度线程
         notifySchedulerThread(trigger.getNextFireTime().getTime());
+        //SchedulerListeners
         notifySchedulerListenersSchduled(trigger);
 
         return ft;
