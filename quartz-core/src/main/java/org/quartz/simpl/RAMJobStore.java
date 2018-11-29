@@ -1405,6 +1405,7 @@ public class RAMJobStore implements JobStore {
         }
 
         Date tnft = tw.trigger.getNextFireTime();
+        //如果没有misFire返回false
         if (tnft == null || tnft.getTime() > misfireTime 
                 || tw.trigger.getMisfireInstruction() == Trigger.MISFIRE_INSTRUCTION_IGNORE_MISFIRE_POLICY) { 
             return false; 
@@ -1415,8 +1416,10 @@ public class RAMJobStore implements JobStore {
             cal = retrieveCalendar(tw.trigger.getCalendarName());
         }
 
+        //触发通知misFire 监听器
         signaler.notifyTriggerListenersMisfired((OperableTrigger)tw.trigger.clone());
 
+        //根据Misfire的处理逻辑进行相关处理
         tw.trigger.updateAfterMisfire(cal);
 
         if (tw.trigger.getNextFireTime() == null) {
@@ -1461,6 +1464,7 @@ public class RAMJobStore implements JobStore {
                 TriggerWrapper tw;
 
                 try {
+                    //获取第一个
                     tw = timeTriggers.first();
                     if (tw == null)
                         break;
@@ -1469,11 +1473,12 @@ public class RAMJobStore implements JobStore {
                     break;
                 }
 
-                //获取下次执行时间
+                //获取下次执行时间是否为NULL
                 if (tw.trigger.getNextFireTime() == null) {
                     continue;
                 }
 
+                //misFire的处理逻辑。
                 if (applyMisfire(tw)) {
                     if (tw.trigger.getNextFireTime() != null) {
                         timeTriggers.add(tw);
@@ -1505,6 +1510,7 @@ public class RAMJobStore implements JobStore {
                 if (result.isEmpty()) {
                     batchEnd = Math.max(tw.trigger.getNextFireTime().getTime(), System.currentTimeMillis()) + timeWindow;
                 }
+                //添加到返回结果
                 result.add(trig);
                 if (result.size() == maxCount)
                     break;

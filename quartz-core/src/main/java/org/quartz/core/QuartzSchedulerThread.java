@@ -64,14 +64,16 @@ public class QuartzSchedulerThread extends Thread {
     private boolean signaled;
     private long signaledNextFireTime;
 
+    //标明线程是否暂停初始时默认为true
     private boolean paused;
-
+    //暂停表示默认为false
     private AtomicBoolean halted;
 
     private Random random = new Random(System.currentTimeMillis());
 
     // When the scheduler finds there is no current trigger to fire, how long
     // it should wait until checking again...
+    //scheduler默认暂停时间
     private static long DEFAULT_IDLE_WAIT_TIME = 30L * 1000L;
 
     private long idleWaitTime = DEFAULT_IDLE_WAIT_TIME;
@@ -147,6 +149,7 @@ public class QuartzSchedulerThread extends Thread {
      * Signals the main processing loop to pause at the next possible point.
      * </p>
      */
+    //使主线程在合适的地方暂停
     void togglePause(boolean pause) {
         synchronized (sigLock) {
             paused = pause;
@@ -164,6 +167,7 @@ public class QuartzSchedulerThread extends Thread {
      * Signals the main processing loop to pause at the next possible point.
      * </p>
      */
+    //使主线程在合适的地方暂停
     void halt(boolean wait) {
         synchronized (sigLock) {
             halted.set(true);
@@ -244,10 +248,12 @@ public class QuartzSchedulerThread extends Thread {
     @Override
     public void run() {
         int acquiresFailed = 0;
+        //判断线程是否暂停，如果没有一直进行循环
         while (!halted.get()) {
             try {
                 //等待QuartzScheduler启动
                 synchronized (sigLock) {
+                    //初始态paused为ture，halted为false，等待Scheduler
                     while (paused && !halted.get()) {
                         try {
                             // wait until togglePause(false) is called...
@@ -267,6 +273,7 @@ public class QuartzSchedulerThread extends Thread {
 
                 // wait a bit, if reading from job store is consistently
                 // failing (e.g. DB is down or restarting)..
+                //从JobStore获取失败，需要等待一定的时间
                 if (acquiresFailed > 1) {
                     try {
                         long delay = computeDelayForRepeatedErrors(qsRsrcs.getJobStore(), acquiresFailed);
@@ -275,7 +282,8 @@ public class QuartzSchedulerThread extends Thread {
                     }
                 }
 
-                //获取可用线程数
+                //获取执行任务线程池中可用线程数,此处会阻塞直到能获取到线程
+                //此处如果阻塞说明执行任务的线程池核心线程太少，全部被占用
                 int availThreadCount = qsRsrcs.getThreadPool().blockForAvailableThreads();
                 if(availThreadCount > 0) { // will always be true, due to semantics of blockForAvailableThreads...
                     List<OperableTrigger> triggers;
@@ -283,7 +291,7 @@ public class QuartzSchedulerThread extends Thread {
                     long now = System.currentTimeMillis();
                     clearSignaledSchedulingChange();
                     try {
-                        //获取接下开将要触发的triger
+                        //获取在now + idleWaitTime之前要触发的triger
                         triggers = qsRsrcs.getJobStore().acquireNextTriggers(
                                 now + idleWaitTime, Math.min(availThreadCount, qsRsrcs.getMaxBatchSize()), qsRsrcs.getBatchTimeWindow());
                         acquiresFailed = 0;
@@ -376,7 +384,7 @@ public class QuartzSchedulerThread extends Thread {
                             TriggerFiredBundle bndle =  result.getTriggerFiredBundle();
                             Exception exception = result.getException();
 
-                            if (exception instanceof RuntimeException) {
+                                                     if (exception instanceof RuntimeException) {
                                 getLog().error("RuntimeException while firing trigger " + triggers.get(i), exception);
                                 qsRsrcs.getJobStore().releaseAcquiredTrigger(triggers.get(i));
                                 continue;
