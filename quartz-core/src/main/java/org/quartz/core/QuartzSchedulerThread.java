@@ -64,9 +64,9 @@ public class QuartzSchedulerThread extends Thread {
     private boolean signaled;
     private long signaledNextFireTime;
 
-    //标明线程是否暂停初始时默认为true
+    //标识线程是否暂停，初始时默认为true
     private boolean paused;
-    //暂停表示默认为false
+    //停止标识，如果为True表示停止运行。
     private AtomicBoolean halted;
 
     private Random random = new Random(System.currentTimeMillis());
@@ -140,6 +140,7 @@ public class QuartzSchedulerThread extends Thread {
         idleWaitVariablness = (int) (waitTime * 0.2);
     }
 
+    //为了保证调度线程wait时间不能过长，所以减去了random.nextInt(idleWaitVariablness)
     private long getRandomizedIdleWaitTime() {
         return idleWaitTime - random.nextInt(idleWaitVariablness);
     }
@@ -150,10 +151,11 @@ public class QuartzSchedulerThread extends Thread {
      * </p>
      */
     //使主线程在合适的地方暂停
+    //在Scheduler启动前会调用参数为false
+
     void togglePause(boolean pause) {
         synchronized (sigLock) {
             paused = pause;
-
             if (paused) {
                 signalSchedulingChange(0);
             } else {
@@ -167,14 +169,17 @@ public class QuartzSchedulerThread extends Thread {
      * Signals the main processing loop to pause at the next possible point.
      * </p>
      */
-    //使主线程在合适的地方暂停
+    //关闭调度线程，值设置halted表示为true.调度线程在合适的地方检查halted值并退出循环
     void halt(boolean wait) {
         synchronized (sigLock) {
             halted.set(true);
 
+            //如果调度线程处于暂停状态，则唤醒
             if (paused) {
                 sigLock.notifyAll();
-            } else {
+            }
+            //如果调度线程处于运行状态，设置signaled为true
+            else {
                 signalSchedulingChange(0);
             }
         }
@@ -248,7 +253,7 @@ public class QuartzSchedulerThread extends Thread {
     @Override
     public void run() {
         int acquiresFailed = 0;
-        //判断线程是否暂停，如果没有一直进行循环
+        //判断线程是否终止，如果没有一直进行循环
         while (!halted.get()) {
             try {
                 //等待QuartzScheduler启动
@@ -333,6 +338,7 @@ public class QuartzSchedulerThread extends Thread {
                                     try {
                                         // we could have blocked a long while
                                         // on 'synchronize', so we must recompute
+                                        //因为需要等待，所以重新计算等待时间
                                         now = System.currentTimeMillis();
                                         timeUntilTrigger = triggerTime - now;
                                         if(timeUntilTrigger >= 1)
@@ -425,7 +431,11 @@ public class QuartzSchedulerThread extends Thread {
                     continue; // while (!halted)
                 }
 
+
+                //如果调度线程在获取now+idleWaitTime之前可以执行的任务为空，说明在这段时间之前没有可以执行的任务
+                //线程会再次休息一段时间，防止调度线程空跑
                 long now = System.currentTimeMillis();
+                //此处至于wait的时间不能太长，不能休眠到now+idleWaitTime之后，防止调度线程执行调度不及时
                 long waitTime = now + getRandomizedIdleWaitTime();
                 long timeUntilContinue = waitTime - now;
                 synchronized(sigLock) {

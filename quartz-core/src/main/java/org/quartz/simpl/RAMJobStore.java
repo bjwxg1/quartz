@@ -1399,7 +1399,7 @@ public class RAMJobStore implements JobStore {
 
         //
         long misfireTime = System.currentTimeMillis();
-        //获取任务超时时间
+        //获取任务超时时间阈值
         if (getMisfireThreshold() > 0) {
             misfireTime -= getMisfireThreshold();
         }
@@ -1420,6 +1420,7 @@ public class RAMJobStore implements JobStore {
         signaler.notifyTriggerListenersMisfired((OperableTrigger)tw.trigger.clone());
 
         //根据Misfire的处理逻辑进行相关处理
+        //如果是CronTrigger 将nextFireTime更新为now
         tw.trigger.updateAfterMisfire(cal);
 
         if (tw.trigger.getNextFireTime() == null) {
@@ -1508,6 +1509,7 @@ public class RAMJobStore implements JobStore {
                 tw.trigger.setFireInstanceId(getFiredTriggerRecordId());
                 OperableTrigger trig = (OperableTrigger) tw.trigger.clone();
                 if (result.isEmpty()) {
+                    //在向result添加之前更新batchEnd
                     batchEnd = Math.max(tw.trigger.getNextFireTime().getTime(), System.currentTimeMillis()) + timeWindow;
                 }
                 //添加到返回结果
